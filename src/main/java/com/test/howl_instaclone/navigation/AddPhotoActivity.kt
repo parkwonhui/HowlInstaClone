@@ -30,8 +30,7 @@ class AddPhotoActivity : AppCompatActivity() {
 
         // add image upload event
         addphoto_btn_upload.setOnClickListener{
-
-
+            contentUpload()
         }
     }
 

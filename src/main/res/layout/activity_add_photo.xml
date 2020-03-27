@@ -35,7 +35,7 @@
         android:id="@+id/editText"
         app:layout_constraintTop_toBottomOf="@id/toolbar_division"
         app:layout_constraintLeft_toRightOf="@id/addphoto_image"
-        android:layout_width="match_parent"
+        android:layout_width="300dp"
         android:layout_height="wrap_content">
         <EditText
             android:layout_gravity="top"
@@ -51,6 +51,6 @@
         android:theme="@style/ButtonStyle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
-    
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>
