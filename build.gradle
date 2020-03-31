@@ -17,9 +17,23 @@ android {
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
-        release {
+        debug {
+            // 프로가드 활성화
             minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            // 기본 프로가드 설정
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            // 프로젝트에 필요한 프로가드 설정
+            //proguardFile 'proguard-rules.pro'
+            // 디버그에 필요한 프로가드 설정
+            //proguardFile 'proguard-debug.pro'
+        }
+        release {
+            // 프로가드 활성화
+            minifyEnabled false
+            // 기본 프로가드 설정
+            //proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            // 프로젝트에 필요한 프로가드 설정
+            //proguardFile 'proguard-rules.pro'
         }
     }
     packagingOptions {
@@ -35,10 +49,6 @@ dependencies {
     implementation 'com.google.firebase:firebase-storage:16.0.5'
     implementation 'com.google.firebase:firebase-firestore:18.0.0'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
-    implementation 'com.google.code.gson:gson:2.8.6'
-    implementation 'com.google.http-client:google-http-client:1.34.0'
-    implementation 'com.google.http-client:google-http-client-android:1.34.0'
-    implementation 'com.google.http-client:google-http-client-gson:1.34.0'
     implementation 'androidx.appcompat:appcompat:1.1.0'
     implementation 'com.google.android.material:material:1.1.0'
     implementation 'androidx.test:runner:1.2.0'

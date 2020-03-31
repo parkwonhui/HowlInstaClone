@@ -5,6 +5,7 @@ import android.content.Intent
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.FirebaseAuth
@@ -26,7 +27,8 @@ class AddPhotoActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add_photo)
-        
+
+        Log.d("TEST_LOG", "AddPhotoActivity start")
         // Initiate
         storage = FirebaseStorage.getInstance()
         auth = FirebaseAuth.getInstance()
@@ -60,34 +62,45 @@ class AddPhotoActivity : AppCompatActivity() {
     }
 
     fun contentUpload() {
+        Log.d("TEST_LOG", "contentUpload()");
         // Make filename
         var timestamp  = SimpleDateFormat("yyyMMdd_HHmmsss").format(Date())
         var imageFileName = "IMAGE_" + timestamp + "_.png"
-
         var storageRef = storage?.reference?.child("images")?.child(imageFileName)
+
+        Log.d("TEST_LOG", "timestamp:"+timestamp)
+        Log.d("TEST_LOG", "imageFileName:"+imageFileName)
+        Log.d("TEST_LOG", "storageRef:"+storageRef)
 
         // 업로드 방식 2가지 callback or promise
         // Promise method 구글에서 권한하는 방식
         storageRef?.putFile(photoUri!!)?.continueWithTask { task : Task<UploadTask.TaskSnapshot> ->
+            Log.d("TEST_LOG", "storageRef.downloadUrl:"+storageRef.downloadUrl)
             return@continueWithTask storageRef.downloadUrl
         }?.addOnSuccessListener { uri ->
                 var contentDTO = ContentDTO()
                 // Insert downloadUrl of image
                 contentDTO.imageUrl = uri.toString()
+                Log.d("TEST_LOG", "contentDTO.imageUrl:"+contentDTO.imageUrl )
 
-                // Insert uid of user
+            // Insert uid of user
                 contentDTO.uid = auth?.currentUser?.uid
+                Log.d("TEST_LOG", "contentDTO.uid :"+contentDTO.uid )
 
-                // Insert UserId
+            // Insert UserId
                 contentDTO.userId = auth?.currentUser?.email
+            Log.d("TEST_LOG", "contentDTO.uid :"+contentDTO.uid )
 
-                // Insert explain of content
+            // Insert explain of content
                 contentDTO.explain = addphoto_edit_explain.toString()
+            Log.d("TEST_LOG", "contentDTO.explain:"+contentDTO.explain)
 
                 // Insert timestamp
                 contentDTO.timestamp = System.currentTimeMillis()
+            Log.d("TEST_LOG", "contentDTO.timestamp:"+contentDTO.timestamp)
 
-                firestore?.collection("images")?.document()?.set(contentDTO)
+
+            firestore?.collection("images")?.document()?.set(contentDTO)
 
                 // 정상적으로 닫혔다는 의미
                 setResult(Activity.RESULT_OK)
