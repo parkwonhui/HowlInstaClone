@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.util.Util
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.test.howl_instaclone.R
 import com.test.howl_instaclone.navigation.model.ContentDTO
@@ -18,9 +19,11 @@ import kotlinx.android.synthetic.main.item_detail.view.*
 
 class DetailViewFragment : Fragment() {
     var firestore : FirebaseFirestore?= null
+    var uid : String? = null
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         var view = LayoutInflater.from(activity).inflate(R.layout.fragment_detail, container, false)
         firestore = FirebaseFirestore.getInstance()
+        uid = FirebaseAuth.getInstance().currentUser?.uid
 
         view.detailviewfragment_recyclerview.adapter = DetailViewRecyclerViewAdapter()
         view.detailviewfragment_recyclerview.layoutManager = LinearLayoutManager(activity)
@@ -69,9 +72,39 @@ class DetailViewFragment : Fragment() {
             viewHolder.detailviewitem_explain_textview.text = contentDTOs!![position].explain
             // likes
             viewHolder.detailviewitem_favoritecounter_textview.text = "Likes" + contentDTOs!![position].favoriteCount
-            // ProfileImage
-            //Glide.with(holder.itemView.context).load(holder.itemView.context.getDrawable(R.drawable.com_facebook_button_icon)).into(viewHolder.detailviewitem_profile_image)
+
+            // This code is when the button is clicked
+            viewHolder.detailviewitem_favorite_imageview.setOnClickListener {
+                favoriteEvent(position)
+            }
+
+            // This code is when the page is loaded
+            if (contentDTOs!![position].favorites.containsKey(uid)) {
+                // This is like status
+                viewHolder.detailviewitem_favorite_imageview.setImageResource(R.drawable.ic_favorite)
+            } else {
+                // This is unlike status
+                viewHolder.detailviewitem_favorite_imageview.setImageResource(R.drawable.ic_favorite_border)
+            }
         }
+        fun favoriteEvent(position : Int) {
+            var tsDoc = firestore?.collection("images")?.document(contentUidList[position])
+            firestore?.runTransaction { transaction ->
+                var contentDTO = transaction.get(tsDoc!!).toObject(ContentDTO::class.java)
+
+                if (contentDTO!!.favorites.containsKey(uid)) {
+                    // When the button is clicked
+                    contentDTO?.favoriteCount = contentDTO?.favoriteCount - 1
+                    contentDTO?.favorites.remove(uid)
+                } else {
+                    contentDTO?.favoriteCount = contentDTO?.favoriteCount + 1
+                    contentDTO?.favorites[uid!!] = true
+                }
+                // save to server
+                transaction.set(tsDoc, contentDTO)
+            }
+        }
+
     }
 
 }
