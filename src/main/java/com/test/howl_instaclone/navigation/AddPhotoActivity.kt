@@ -78,34 +78,33 @@ class AddPhotoActivity : AppCompatActivity() {
             Log.d("TEST_LOG", "storageRef.downloadUrl:"+storageRef.downloadUrl)
             return@continueWithTask storageRef.downloadUrl
         }?.addOnSuccessListener { uri ->
-                var contentDTO = ContentDTO()
-                // Insert downloadUrl of image
-                contentDTO.imageUrl = uri.toString()
-                Log.d("TEST_LOG", "contentDTO.imageUrl:"+contentDTO.imageUrl )
+            var contentDTO = ContentDTO()
+            // Insert downloadUrl of image
+            contentDTO.imageUrl = uri.toString()
+            Log.d("TEST_LOG", "contentDTO.imageUrl:"+contentDTO.imageUrl )
 
             // Insert uid of user
-                contentDTO.uid = auth?.currentUser?.uid
-                Log.d("TEST_LOG", "contentDTO.uid :"+contentDTO.uid )
-
-            // Insert UserId
-                contentDTO.userId = auth?.currentUser?.email
+            contentDTO.uid = auth?.currentUser?.uid
             Log.d("TEST_LOG", "contentDTO.uid :"+contentDTO.uid )
 
+            // Insert UserId
+            contentDTO.userId = auth?.currentUser?.email
+            Log.d("TEST_LOG", "contentDTO.uid :"+contentDTO.userId )
+
             // Insert explain of content
-                contentDTO.explain = addphoto_edit_explain.toString()
+            contentDTO.explain = addphoto_edit_explain.text.toString()
             Log.d("TEST_LOG", "contentDTO.explain:"+contentDTO.explain)
 
-                // Insert timestamp
-                contentDTO.timestamp = System.currentTimeMillis()
+            // Insert timestamp
+            contentDTO.timestamp = System.currentTimeMillis()
             Log.d("TEST_LOG", "contentDTO.timestamp:"+contentDTO.timestamp)
-
 
             firestore?.collection("images")?.document()?.set(contentDTO)
 
-                // 정상적으로 닫혔다는 의미
-                setResult(Activity.RESULT_OK)
+            // 정상적으로 닫혔다는 의미
+            setResult(Activity.RESULT_OK)
 
-                finish()
+            finish()
         }
 
         // Callback method

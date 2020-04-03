@@ -19,8 +19,8 @@ import kotlinx.android.synthetic.main.item_detail.view.*
 class DetailViewFragment : Fragment() {
     var firestore : FirebaseFirestore?= null
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        Log.d("TEST_LOG", "DetailViewFragment onCreateView call")
         var view = LayoutInflater.from(activity).inflate(R.layout.fragment_detail, container, false)
+        firestore = FirebaseFirestore.getInstance()
 
         view.detailviewfragment_recyclerview.adapter = DetailViewRecyclerViewAdapter()
         view.detailviewfragment_recyclerview.layoutManager = LinearLayoutManager(activity)
@@ -28,12 +28,11 @@ class DetailViewFragment : Fragment() {
     }
 
     inner class DetailViewRecyclerViewAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
-
         var contentDTOs : ArrayList<ContentDTO> = arrayListOf()
         var contentUidList : ArrayList<String> = arrayListOf()
         init {
+
             firestore?.collection("images")?.orderBy("timestamp")?.addSnapshotListener { querySnapshot, firebaseFirestoreException ->
-                Log.d("TEST_LOG", "DetailViewRecyclerViewAdapter init")
                 // 스냅샷 찍기
                 contentDTOs.clear()
                 contentUidList.clear()
@@ -62,8 +61,6 @@ class DetailViewFragment : Fragment() {
         // 서버에서 받아온 데이터 매핑
         override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
             var viewHolder = (holder as CustomViewHolder).itemView
-            Log.d("test_log","데이터 받아왔나?"+viewHolder.detailviewitem_profile_textview.text);
-
             // UserId
             viewHolder.detailviewitem_profile_textview.text = contentDTOs!![position].userId
             // Image
@@ -73,7 +70,7 @@ class DetailViewFragment : Fragment() {
             // likes
             viewHolder.detailviewitem_favoritecounter_textview.text = "Likes" + contentDTOs!![position].favoriteCount
             // ProfileImage
-            Glide.with(holder.itemView.context).load(contentDTOs!![position].imageUrl).into(viewHolder.detailviewitem_profile_image)
+            //Glide.with(holder.itemView.context).load(holder.itemView.context.getDrawable(R.drawable.com_facebook_button_icon)).into(viewHolder.detailviewitem_profile_image)
         }
     }
 
