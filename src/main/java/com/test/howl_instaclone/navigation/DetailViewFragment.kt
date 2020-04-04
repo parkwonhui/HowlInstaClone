@@ -39,6 +39,10 @@ class DetailViewFragment : Fragment() {
                 // 스냅샷 찍기
                 contentDTOs.clear()
                 contentUidList.clear()
+                if (querySnapshot == null) {
+                    return@addSnapshotListener
+                }
+
                 // snapshot에 데이터를 순서대로 읽기
                 for (snapshot in querySnapshot!!.documents) {
                     Log.d("TEST_LOG", "snapshot 데이터 읽기!!!")
@@ -86,6 +90,18 @@ class DetailViewFragment : Fragment() {
                 // This is unlike status
                 viewHolder.detailviewitem_favorite_imageview.setImageResource(R.drawable.ic_favorite_border)
             }
+
+            // 프로필 이미지 클릭 시 상대 정보로 이동
+            // Thid code is when the profile image is clicked
+            viewHolder.detailviewitem_profile_image.setOnClickListener {
+                var fragment = UserFragment()
+                var bundle = Bundle()
+                bundle.putString("destinationUid", contentDTOs[position].uid)
+                bundle.putString("userId", contentDTOs[position].userId)
+                fragment.arguments = bundle
+                activity?.supportFragmentManager?.beginTransaction()?.replace(R.id.main_content, fragment)?.commit()
+            }
+
         }
         fun favoriteEvent(position : Int) {
             var tsDoc = firestore?.collection("images")?.document(contentUidList[position])

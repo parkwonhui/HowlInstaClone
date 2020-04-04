@@ -58,6 +58,12 @@ class LoginActivity : AppCompatActivity() {
         callbackManager = CallbackManager.Factory.create()
     }
 
+    override fun onStart() {
+        super.onStart()
+        // 자동 로그인 되도록 만듬
+        moveMainPage(auth?.currentUser)
+    }
+
     fun printHashKey() {
         try {
             val info = packageManager.getPackageInfo(packageName, PackageManager.GET_SIGNATURES)
@@ -188,6 +194,7 @@ class LoginActivity : AppCompatActivity() {
     fun moveMainPage(user:FirebaseUser?) {
         if (user != null) {
             startActivity(Intent(this, MainActivity::class.java));
+            finish()
         }
     }
 }
