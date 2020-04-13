@@ -12,6 +12,7 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.util.Util
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import com.test.howl_instaclone.R
 import com.test.howl_instaclone.navigation.model.ContentDTO
 import kotlinx.android.synthetic.main.fragment_detail.view.*
@@ -34,8 +35,7 @@ class DetailViewFragment : Fragment() {
         var contentDTOs : ArrayList<ContentDTO> = arrayListOf()
         var contentUidList : ArrayList<String> = arrayListOf()
         init {
-
-            firestore?.collection("images")?.orderBy("timestamp")?.addSnapshotListener { querySnapshot, firebaseFirestoreException ->
+            firestore?.collection("images")?.orderBy("timestamp",Query.Direction.DESCENDING)?.addSnapshotListener { querySnapshot, firebaseFirestoreException ->
                 // 스냅샷 찍기
                 contentDTOs.clear()
                 contentUidList.clear()
