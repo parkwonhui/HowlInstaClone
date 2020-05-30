@@ -1,6 +1,7 @@
 package com.test.howl_instaclone.navigation
 
 import android.content.Intent
+import android.graphics.*
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -33,7 +34,7 @@ class UserFragment : Fragment() {
         var PICK_PROFILE_FROM_ALBUM = 10
     }
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        fragmentView = LayoutInflater.from(activity).inflate(R.layout.fragment_user, container, false);
+        fragmentView = LayoutInflater.from(activity).inflate(R.layout.fragment_user, container, false)
         uid = arguments?.getString("destinationUid")
         firestore = FirebaseFirestore.getInstance()
         auth = FirebaseAuth.getInstance()
@@ -61,7 +62,11 @@ class UserFragment : Fragment() {
             mainActivity?.toolbar_title_image?.visibility = View.GONE
             mainActivity?.toolbar_username?.visibility = View.VISIBLE
             mainActivity?.toolbar_btn_back?.visibility = View.VISIBLE
-
+            // Follow 버튼에 이벤트 추가
+            fragmentView?.account_btn_follow_signout?.setOnClickListener {
+                Log.d("TEST_LOG", "click follow btn")
+                requestFollow()
+            }
         }
 
         fragmentView?.account_recyclerView?.adapter = UserFragmentRecyclerViewAdapter()
@@ -74,54 +79,113 @@ class UserFragment : Fragment() {
         }
 
         getProfileImage()
+        getFollowerAndFollowing()
         return fragmentView
     }
 
+    // 화면에 카운터가 변화됨
+    fun getFollowerAndFollowing() {
+        // 내 페이지를 클릭 했을 땐 내uid, 상대방 페이지 클릭 시 상대방 페이지
+        // snapshot으로 값을 실시간으로 불러옴
+        firestore?.collection("users")?.document(uid!!)?.addSnapshotListener {
+            documentSnapshot, firebaseFirestoreException ->
+            // followDTO로 documentSnapshot 받아오기
+            var followDTO = documentSnapshot?.toObject(FollowDTO::class.java)
+            // following count에 값 출력
+            if (followDTO?.followingCount != null) {
+                fragmentView?.account_tv_following_count?.text = followDTO?.followingCount?.toString()
+
+            }
+            // follow count도 출력
+            if (followDTO?.followerCount != null) {
+                fragmentView?.account_tv_following_count?.text = followDTO?.followerCount?.toString()
+                // follow를 하고 있으면 button이 변함
+                if (followDTO?.followers?.containsKey(currentUserUid!!)) {
+                    fragmentView?.account_btn_follow_signout?.text =getString(R.string.follow_cancel)
+                    fragmentView?.account_btn_follow_signout?.background?.colorFilter =
+                        PorterDuffColorFilter(Color.parseColor("#0fff0000"), PorterDuff.Mode.SRC_OVER)
+                } else {
+                    fragmentView?.account_btn_follow_signout?.text =getString(R.string.follow)
+                    // 상대방 유저 fragment일 때 백그라운드 컬러를 없앤다
+                    if (uid != currentUserUid) {
+                        fragmentView?.account_btn_follow_signout?.background?.colorFilter = null
+                    }
+                }
+            }
+
+        }
+    }
+
+
     fun requestFollow() {
-        // Save data my account
+        // Save data my account  나의 계정에서 상대가 누구를 follow하는지
+        // db에 값이 없을 경우 만들어준다
         var tsDocFollowing = firestore?.collection("users")?.document(currentUserUid!!)
+
         firestore?.runTransaction { transaction ->
             var followDTO = transaction.get(tsDocFollowing!!).toObject(FollowDTO::class.java)
+            Log.d("TEST_LOG", "followDTO == null:"+(followDTO == null))
             if (followDTO == null) {
                 followDTO = FollowDTO()
                 followDTO!!.followingCount = 1
+                // 중복 팔로잉 방지를 위해 상대방 uid를 넣어줌
                 followDTO!!.followers[uid!!] = true
 
                 transaction.set(tsDocFollowing, followDTO)
                 return@runTransaction
             }
+            Log.d("TEST_LOG", "followDTO.followings.containsKey(uid):"+(followDTO.followings.containsKey(uid)))
 
+            // 상대방 키가 있을 경우(내가 팔로우 한 상태)
             if (followDTO.followings.containsKey(uid)) {
                 // It remove following third person when a third person follow me
-                followDTO?.followingCount = followDTO?.followingCount - 1;
+                followDTO?.followingCount = followDTO?.followingCount - 1
+                // 상대 uid 제거
                 followDTO?.followers?.remove(uid)
             } else {
                 // It add following third person when a third person follow me
-                followDTO?.followingCount = followDTO?.followingCount + 1;
+                followDTO?.followingCount = followDTO?.followingCount + 1
+                // 상대방 uid 추가
                 followDTO.followers[uid!!] = true
             }
             transaction.set(tsDocFollowing, followDTO)
+            // transaction 닫아주기
             return@runTransaction
         }
-        // Save data to third person
+        // Save data to third person, 내가 팔로잉 할 상대방 계정에 접근
         var tsDocFollower = firestore?.collection("users")?.document(uid!!)
         firestore?.runTransaction { transaction ->
             var followDTO = transaction.get(tsDocFollower!!).toObject(FollowDTO::class.java)
+            // 값이 없을 경우
+            Log.d("TEST_LOG","followDTO == null:"+(followDTO == null))
+            Log.d("TEST_LOG", "followDTO!!.followers.containsKey(currentUserUid):"+(followDTO!!.followers.containsKey(currentUserUid)))
             if (followDTO == null) {
                 followDTO = FollowDTO()
                 followDTO!!.followerCount = 1
+                // 상대방에게 나의 uid 넣어주기
                 followDTO!!.followers[currentUserUid!!] = true
 
                 transaction.set(tsDocFollower, followDTO!!)
                 return@runTransaction
             }
 
+            // 상대방 계정에 내가 follow를 했을 경우
             if (followDTO!!.followers.containsKey(currentUserUid)) {
-                // It cancel my follower when I follow a third person
+                // 팔로우 취소
+                followDTO?.followerCount = followDTO!!.followerCount - 1
+                // 나의 uid를 입력
+                followDTO?.followers?.remove(currentUserUid!!)
             } else {
-                // It add my follower when I follow a third person
-            }
+                // 팔로우를 하지 않았을 경우
+                // It add my follower when I follow a third person do not
+                followDTO?.followerCount = followDTO!!.followerCount + 1
+                // 나의 uid 추가
+                followDTO!!.followers[currentUserUid!!] = true
 
+            }
+            // DB 값 저장
+            transaction.set(tsDocFollower, followDTO!!)
+            return@runTransaction
         }
     }
 
